@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Keyaki</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+	<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+	<link rel="stylesheet" href="./reset.css">
+	<link rel="stylesheet" href="./index.css">
+</head>
+
+
+<body>
+	<header>
+		<nav class="navbar">
+			<ul class="nav-links">
+				<li class="li-L"><a href="#hero">Home</a></li>
+				<li class="li-L"><a href="#about">About</a></li>
+				<img src="./assets/logo-text.svg" class="logo"/>
+				<li class="li-R"><a href="#music">Music</a></li>
+				<li class="li-R"><a href="#contact">Contact</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<section class="hero-banner">
+		<!-- <lottie-player
+			id="introFX"
+			src="./assets/lottie/thunder_1751525363910.json"
+			background="transparent"
+			speed="1"
+			style="display:none; position:absolute; top:20vh; left: 30vw; width:40vw; height:50vh;"
+			loop>
+		</lottie-player> -->
+
+		<div class="banner-bg banner-left"></div>
+
+		<div class="hero-center">
+			<img src="./assets/logo.svg" class="hero-logo"/>
+			<div class="hero-text">
+				<h1>WELCOME TO MY WORLD</h1>
+				<div class="buttons">
+					<a href="#music">🎧 Explore My Music</a>
+					<a href="https://youtube.com" target="_blank">🎥 Visit My YouTube</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="banner-bg banner-right"></div>
+	</section>
+
+	<section class="about">
+		<div class="about-img">
+			<img src="artist-portrait.jpg" alt="Artist Portrait" />
+		</div>
+		<div class="about-text">
+			<h2>About Me</h2>
+			<p>学生、作曲家、ロゴ・アーティスト、Web開発者</p>
+			<p>ホビーで作曲をしている大学生。壮大な大自然から遠未来の世界まで、古今東西を音楽で表現することを目指しています。オーケストラからサイバーパンクまで、あらゆる世界を音で描くことを得意とします。</p>
+		</div>
+	</section>
+
+	<section class="latest-release">
+		<h2>Latest Release</h2>
+		<div class="release-card">
+			<iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
+		</div>
+	</section>
+
+	<!--<script src="./js/headerTrigger.js"></script>-->
+	<script src="./js/index.js"></script>
+	<script src="./js/powerglitch.min.js"></script>
+</body>
+</html>
