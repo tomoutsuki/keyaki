@@ -33,8 +33,63 @@ const PLATFORM_DETAILS = {
 
 window.addEventListener("DOMContentLoaded", () => {
 	startHeroIntro();
+	startSectionGlitches();
 	initReleaseCarousel();
 });
+
+function startSectionGlitches() {
+	if (!window.PowerGlitch) {
+		return;
+	}
+
+	const repeatingGlitchOptions = {
+		playMode: "always",
+		timing: {
+			duration: 3500,
+			iterations: Infinity,
+		},
+		glitchTimeSpan: {
+			start: 0,
+			end: 0.15,
+		},
+		shake: {
+			velocity: 2,
+			amplitudeX: 0.1,
+			amplitudeY: 0.1,
+		},
+		slice: {
+			count: 1,
+			velocity: 5,
+			minHeight: 0.05,
+			maxHeight: 0.30,
+			hueRotate: false,
+		},
+		pulse: false,
+	};
+
+	window.PowerGlitch.glitch(
+		".about-text h2, .latest-release h2, .contact h2",
+		repeatingGlitchOptions,
+	);
+
+	window.PowerGlitch.glitch(".about-image-glitch", {
+		...repeatingGlitchOptions,
+		createContainers: false,
+		hideOverflow: true,
+		shake: {
+			velocity: 3,
+			amplitudeX: 0.06,
+			amplitudeY: 0.04,
+		},
+		slice: {
+			count: 1,
+			velocity: 6,
+			minHeight: 0.10,
+			maxHeight: 0.30,
+			hueRotate: true,
+		},
+	});
+}
 
 function startHeroIntro() {
 	const introStage = document.querySelector(".intro-stage");

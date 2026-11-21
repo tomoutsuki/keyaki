@@ -357,18 +357,20 @@ header {
 	z-index: 1;
 }
 
-.about-img {
+.about-image-glitch {
 	position: absolute;
-	height: auto;
 	width: 50vw;
 	bottom: 0;
 	right: 3vw;
-	
 	opacity: 0.8;
-	align-self: end;
 	overflow: hidden;
 }
 
+.about-img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
 
 .about-text h2,
 .latest-release h2,
@@ -815,7 +817,7 @@ footer a:hover {
 		max-width: min(38rem, 72vw);
 	}
 
-	.about-img {
+	.about-image-glitch {
 		right: -8vw;
 		width: min(38rem, 66vw);
 		opacity: 0.48;
@@ -896,7 +898,7 @@ footer a:hover {
 		max-width: none;
 	}
 
-	.about-img {
+	.about-image-glitch {
 		right: -32vw;
 		width: 110vw;
 		opacity: 0.38;
