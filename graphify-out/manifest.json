@@ -1,0 +1,86 @@
+{
+  "assets/lottie/thunder_1751523321705.json": {
+    "mtime": 1795201139.4739158,
+    "seen": 1795213409.8044813,
+    "ast_hash": "78ed4e66718d9c4a9b14c52d7c899c90",
+    "semantic_hash": "78ed4e66718d9c4a9b14c52d7c899c90"
+  },
+  "assets/lottie/thunder_1751525363910.json": {
+    "mtime": 1795201139.4802442,
+    "seen": 1795213409.8044887,
+    "ast_hash": "206a90222b8a839390b62d1a9ad46c69",
+    "semantic_hash": "206a90222b8a839390b62d1a9ad46c69"
+  },
+  "js/headerTrigger.js": {
+    "mtime": 1795201139.4807973,
+    "seen": 1795213409.8044918,
+    "ast_hash": "446ab74fd6b3b81d9f7d926d0429a7b9",
+    "semantic_hash": "446ab74fd6b3b81d9f7d926d0429a7b9"
+  },
+  "js/index.js": {
+    "mtime": 1795201139.4823587,
+    "seen": 1795213409.804494,
+    "ast_hash": "e5cabd1ed63e6c5cd5b2a7b14371854a",
+    "semantic_hash": "e5cabd1ed63e6c5cd5b2a7b14371854a"
+  },
+  "js/powerglitch.min.js": {
+    "mtime": 1795201139.482622,
+    "seen": 1795213409.8044956,
+    "ast_hash": "cb946478da4fb3a2d0a1a9eee103e3e7",
+    "semantic_hash": "cb946478da4fb3a2d0a1a9eee103e3e7"
+  },
+  "README.md": {
+    "mtime": 1795188668.4954786,
+    "seen": 1795213409.804497,
+    "ast_hash": "e321e43790cbca504fccfade856e39c6",
+    "semantic_hash": "e321e43790cbca504fccfade856e39c6"
+  },
+  "index.html": {
+    "mtime": 1795212931.2561455,
+    "seen": 1795213409.8044984,
+    "ast_hash": "0635cc4ea58777d425f940fe9a5333ae",
+    "semantic_hash": "0635cc4ea58777d425f940fe9a5333ae"
+  },
+  "assets/banner.png": {
+    "mtime": 1795201086.685515,
+    "seen": 1795213409.8044999,
+    "ast_hash": "91884cc24e90f243cac79dafde417180",
+    "semantic_hash": "91884cc24e90f243cac79dafde417180"
+  },
+  "assets/banner_L.png": {
+    "mtime": 1795201086.6107738,
+    "seen": 1795213409.8045013,
+    "ast_hash": "e7f90af756819532f608fa2d5cca3942",
+    "semantic_hash": "e7f90af756819532f608fa2d5cca3942"
+  },
+  "assets/banner_R.png": {
+    "mtime": 1795201086.6376326,
+    "seen": 1795213409.8045025,
+    "ast_hash": "d3868392c9368db29ee4b0ddac7f2ce8",
+    "semantic_hash": "d3868392c9368db29ee4b0ddac7f2ce8"
+  },
+  "assets/icon.svg": {
+    "mtime": 1795209634.1126895,
+    "seen": 1795213409.8045042,
+    "ast_hash": "0e07ea50b081eb59ea5d608120c1822a",
+    "semantic_hash": "0e07ea50b081eb59ea5d608120c1822a"
+  },
+  "assets/logo-text.svg": {
+    "mtime": 1795201139.4710665,
+    "seen": 1795213409.8045173,
+    "ast_hash": "4ead08ccd467538b33382288648bfea2",
+    "semantic_hash": "4ead08ccd467538b33382288648bfea2"
+  },
+  "assets/logo.svg": {
+    "mtime": 1795201139.471307,
+    "seen": 1795213409.804519,
+    "ast_hash": "22687184ab78cb0a42e2e7f956aeee4a",
+    "semantic_hash": "22687184ab78cb0a42e2e7f956aeee4a"
+  },
+  "assets/portrait.png": {
+    "mtime": 1795212228.6086905,
+    "seen": 1795213409.8045201,
+    "ast_hash": "58afca95b287bb9b3042e42a528ae57d",
+    "semantic_hash": "58afca95b287bb9b3042e42a528ae57d"
+  }
+}

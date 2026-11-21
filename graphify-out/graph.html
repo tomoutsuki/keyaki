@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>graphify - graphify-out/graph.html</title>
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"
+        integrity="sha384-Ux6phic9PEHJ38YtrijhkzyJ8yQlH8i/+buBR8s3mAZOJrP1gwyvAcIYl3GWtpX1"
+        crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f1a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  #graph { flex: 1; }
+  #sidebar { width: 280px; background: #1a1a2e; border-left: 1px solid #2a2a4e; display: flex; flex-direction: column; overflow: hidden; }
+  #search-wrap { padding: 12px; border-bottom: 1px solid #2a2a4e; }
+  #search { width: 100%; background: #0f0f1a; border: 1px solid #3a3a5e; color: #e0e0e0; padding: 7px 10px; border-radius: 6px; font-size: 13px; outline: none; }
+  #search:focus { border-color: #4E79A7; }
+  #search-results { max-height: 140px; overflow-y: auto; padding: 4px 12px; border-bottom: 1px solid #2a2a4e; display: none; }
+  .search-item { padding: 4px 6px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-item:hover { background: #2a2a4e; }
+  #info-panel { padding: 14px; border-bottom: 1px solid #2a2a4e; min-height: 140px; }
+  #info-panel h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #info-content { font-size: 13px; color: #ccc; line-height: 1.6; }
+  #info-content .field { margin-bottom: 5px; }
+  #info-content .field b { color: #e0e0e0; }
+  #info-content .empty { color: #555; font-style: italic; }
+  .neighbor-link { display: block; padding: 2px 6px; margin: 2px 0; border-radius: 3px; cursor: pointer; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid #333; }
+  .neighbor-link:hover { background: #2a2a4e; }
+  #neighbors-list { max-height: 160px; overflow-y: auto; margin-top: 4px; }
+  #legend-wrap { flex: 1; overflow-y: auto; padding: 12px; }
+  #legend-wrap h3 { font-size: 13px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; border-radius: 4px; font-size: 12px; }
+  .legend-item:hover { background: #2a2a4e; padding-left: 4px; }
+  .legend-item.dimmed { opacity: 0.35; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .legend-count { color: #666; font-size: 11px; }
+  #stats { padding: 10px 14px; border-top: 1px solid #2a2a4e; font-size: 11px; color: #555; }
+  #legend-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 4px 0; }
+  #legend-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #aaa; user-select: none; }
+  #legend-controls label:hover { color: #e0e0e0; }
+  .legend-cb, #select-all-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid #3a3a5e; border-radius: 3px; background: #0f0f1a; cursor: pointer; position: relative; flex-shrink: 0; }
+  .legend-cb:checked, #select-all-cb:checked { background: #4E79A7; border-color: #4E79A7; }
+  .legend-cb:checked::after, #select-all-cb:checked::after { content: ''; position: absolute; left: 3.5px; top: 1px; width: 4px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  #select-all-cb:indeterminate { background: #4E79A7; border-color: #4E79A7; }
+  #select-all-cb:indeterminate::after { content: ''; position: absolute; left: 2px; top: 5px; width: 8px; height: 2px; background: #fff; border: none; transform: none; }
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="sidebar">
+  <div id="search-wrap">
+    <input id="search" type="text" placeholder="Search nodes..." autocomplete="off">
+    <div id="search-results"></div>
+  </div>
+  <div id="info-panel">
+    <h3>Node Info</h3>
+    <div id="info-content"><span class="empty">Click a node to inspect it</span></div>
+  </div>
+  <div id="legend-wrap">
+    <h3>Communities</h3>
+    <div id="legend-controls">
+      <label><input type="checkbox" id="select-all-cb" checked onchange="toggleAllCommunities(!this.checked)">Select All</label>
+    </div>
+    <div id="legend"></div>
+  </div>
+  <div id="stats">69 nodes &middot; 81 edges &middot; 12 communities</div>
+</div>
+<script>
+const RAW_NODES = [{"id": "js_index", "label": "index.js", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 10.0, "font": {"size": 0, "color": "#ffffff"}, "title": "index.js", "community": 10, "community_name": "Glitch Intro Animation", "source_file": "js/index.js", "file_type": "code", "degree": 0}, {"id": "js_powerglitch_min", "label": "powerglitch.min.js", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 10.0, "font": {"size": 0, "color": "#ffffff"}, "title": "powerglitch.min.js", "community": 11, "community_name": "Glitch Animation Library", "source_file": "js/powerglitch.min.js", "file_type": "code", "degree": 0}, {"id": "js_headertrigger", "label": "headerTrigger.js", "color": {"background": "#BAB0AC", "border": "#BAB0AC", "highlight": {"background": "#ffffff", "border": "#BAB0AC"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "headerTrigger.js", "community": 9, "community_name": "Header Scroll Behavior", "source_file": "js/headerTrigger.js", "file_type": "code", "degree": 2}, {"id": "js_headertrigger_header", "label": "header", "color": {"background": "#BAB0AC", "border": "#BAB0AC", "highlight": {"background": "#ffffff", "border": "#BAB0AC"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "header", "community": 9, "community_name": "Header Scroll Behavior", "source_file": "js/headerTrigger.js", "file_type": "code", "degree": 1}, {"id": "js_headertrigger_herobanner", "label": "heroBanner", "color": {"background": "#BAB0AC", "border": "#BAB0AC", "highlight": {"background": "#ffffff", "border": "#BAB0AC"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "heroBanner", "community": 9, "community_name": "Header Scroll Behavior", "source_file": "js/headerTrigger.js", "file_type": "code", "degree": 1}, {"id": "index_keyaki_page", "label": "Keyaki Artist Website", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Keyaki Artist Website", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "code", "degree": 3}, {"id": "index_artist_persona", "label": "Artist, Engineer, Brand Designer", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 35.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Artist, Engineer, Brand Designer", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "concept", "degree": 5}, {"id": "index_in_the_box_music_production", "label": "In-the-Box Music Production", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "In-the-Box Music Production", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "concept", "degree": 1}, {"id": "index_japanese_edm_community", "label": "Japanese EDM Community", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Japanese EDM Community", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "concept", "degree": 1}, {"id": "index_mainstream_edm_artists", "label": "Mainstream EDM Artists", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Mainstream EDM Artists", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "concept", "degree": 1}, {"id": "readme_artist_website", "label": "Artist Website for Musical Activities", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Artist Website for Musical Activities", "community": 0, "community_name": "Artist Story and Identity", "source_file": "README.md", "file_type": "concept", "degree": 2}, {"id": "readme_keyaki", "label": "Keyaki", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Keyaki", "community": 0, "community_name": "Artist Story and Identity", "source_file": "README.md", "file_type": "document", "degree": 1}, {"id": "index_compositions_as_adventures", "label": "Compositions as Adventures and Journeys", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Compositions as Adventures and Journeys", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "rationale", "degree": 1}, {"id": "index_move_people_through_music", "label": "Move People Through Music", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Move People Through Music", "community": 0, "community_name": "Artist Story and Identity", "source_file": "index.html", "file_type": "rationale", "degree": 2}, {"id": "assets_banner_nature_technology_contrast", "label": "Nature and Technology Contrast", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Nature and Technology Contrast", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "concept", "degree": 2}, {"id": "assets_banner_futuristic_city", "label": "Futuristic City", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 30.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Futuristic City", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 4}, {"id": "assets_banner_lone_traveler", "label": "Lone Traveler", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Lone Traveler", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 2}, {"id": "assets_banner_misty_mountains", "label": "Misty Mountains", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Misty Mountains", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 1}, {"id": "assets_banner_mountain_lake", "label": "Reflective Mountain Lake", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Reflective Mountain Lake", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 3}, {"id": "assets_banner_mountain_lake_cityscape", "label": "Mountain Lake and Futuristic Cityscape", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 35.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Mountain Lake and Futuristic Cityscape", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 5}, {"id": "assets_banner_sunbeams", "label": "Sunbeams Through Storm Clouds", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Sunbeams Through Storm Clouds", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "image", "degree": 1}, {"id": "assets_banner_journey_toward_future", "label": "Journey Toward the Future", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Journey Toward the Future", "community": 1, "community_name": "Unified Banner Landscape", "source_file": "assets/banner.png", "file_type": "rationale", "degree": 2}, {"id": "assets_banner_r_harmony_with_nature", "label": "Harmony with Nature", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 30.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Harmony with Nature", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "concept", "degree": 4}, {"id": "assets_banner_r_ancient_tree", "label": "Ancient Forest Tree", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Ancient Forest Tree", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 2}, {"id": "assets_banner_r_forest_guardian_scene", "label": "Forest Guardian Scene", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 35.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Forest Guardian Scene", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 5}, {"id": "assets_banner_r_leaf_adornment", "label": "Leaf Adornment", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Leaf Adornment", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 2}, {"id": "assets_banner_r_stag", "label": "Stag", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Stag", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 2}, {"id": "assets_banner_r_waterfall", "label": "Forest Waterfall", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Forest Waterfall", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 1}, {"id": "assets_banner_r_young_woman", "label": "Young Woman in Leaf-Patterned Dress", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 30.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Young Woman in Leaf-Patterned Dress", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "image", "degree": 4}, {"id": "assets_banner_r_forest_guardianship", "label": "Forest Guardianship", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Forest Guardianship", "community": 2, "community_name": "Forest Guardian Artwork", "source_file": "assets/banner_R.png", "file_type": "rationale", "degree": 2}, {"id": "assets_logo_modular_geometric_construction", "label": "Modular Geometric Construction", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 30.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Modular Geometric Construction", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "concept", "degree": 4}, {"id": "assets_logo_abstract_geometric_logo", "label": "Abstract Geometric Logo", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Abstract Geometric Logo", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 1}, {"id": "assets_logo_circular_forms", "label": "Circular Forms", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Circular Forms", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 3}, {"id": "assets_logo_masked_circular_arcs", "label": "Masked Circular Arcs", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Masked Circular Arcs", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 2}, {"id": "assets_logo_rectangular_bars", "label": "Rectangular Bars", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Rectangular Bars", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 2}, {"id": "assets_logo_triangular_terminals", "label": "Triangular Terminals", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Triangular Terminals", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 2}, {"id": "assets_logo_white_geometric_wordmark", "label": "White Geometric Wordmark", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "White Geometric Wordmark", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "image", "degree": 6}, {"id": "assets_logo_visual_coherence", "label": "Visual Coherence Through Repeated Geometry", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Visual Coherence Through Repeated Geometry", "community": 3, "community_name": "Primary Geometric Logo", "source_file": "assets/logo.svg", "file_type": "rationale", "degree": 2}, {"id": "index_abgrundkrieg", "label": "Abgrundkrieg", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Abgrundkrieg", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 2}, {"id": "index_colourful", "label": "Colourful", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Colourful", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 2}, {"id": "index_iracema", "label": "Iracema", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Iracema", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 2}, {"id": "index_latest_release", "label": "Latest Release", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 35.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Latest Release", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 5}, {"id": "index_lichtgarten", "label": "Lichtgarten", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Lichtgarten", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 2}, {"id": "index_underwater_carnaval", "label": "Underwater Carnaval", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Underwater Carnaval", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 2}, {"id": "index_youtube", "label": "YouTube", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "YouTube", "community": 4, "community_name": "Music Release Collection", "source_file": "index.html", "file_type": "concept", "degree": 6}, {"id": "assets_banner_l_circuit_landscape", "label": "Circuit-Patterned Landscape", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Circuit-Patterned Landscape", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "concept", "degree": 2}, {"id": "assets_banner_l_cybernetic_woman", "label": "Cybernetic Woman", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Cybernetic Woman", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "concept", "degree": 2}, {"id": "assets_banner_l_cyberpunk_aesthetic", "label": "Cyberpunk Aesthetic", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Cyberpunk Aesthetic", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "concept", "degree": 3}, {"id": "assets_banner_l_flying_vehicles", "label": "Flying Vehicles", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Flying Vehicles", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "concept", "degree": 2}, {"id": "assets_banner_l_futuristic_city", "label": "Futuristic Cityscape", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Futuristic Cityscape", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "concept", "degree": 3}, {"id": "assets_banner_l_banner_image", "label": "Banner L Illustration", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 30.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Banner L Illustration", "community": 5, "community_name": "Legacy Cyberpunk Banner", "source_file": "assets/banner_L.png", "file_type": "image", "degree": 4}, {"id": "assets_icon_geometric_glyph", "label": "Geometric Glyph", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Geometric Glyph", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "concept", "degree": 3}, {"id": "assets_icon_kanji_keyaki", "label": "Kanji \u6b05 (Keyaki / Zelkova)", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Kanji \u6b05 (Keyaki / Zelkova)", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "concept", "degree": 1}, {"id": "assets_icon_masked_gradient_fill", "label": "Masked Diamond-Gradient Fill", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Masked Diamond-Gradient Fill", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "concept", "degree": 2}, {"id": "assets_icon_monochrome_vector_style", "label": "Monochrome Geometric Vector Style", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Monochrome Geometric Vector Style", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "concept", "degree": 3}, {"id": "assets_icon_square_frame", "label": "Square Border Frame", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Square Border Frame", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "concept", "degree": 2}, {"id": "assets_icon_vector_icon", "label": "Keyaki Vector Icon", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Keyaki Vector Icon", "community": 6, "community_name": "Framed Header Icon", "source_file": "assets/icon.svg", "file_type": "image", "degree": 3}, {"id": "assets_logo_text_geometric_construction", "label": "Geometric Construction from Rectangles, Triangles, Circles, and Arcs", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Geometric Construction from Rectangles, Triangles, Circles, and Arcs", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "concept", "degree": 1}, {"id": "assets_logo_text_geometric_emblem", "label": "Abstract Geometric Emblem", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Abstract Geometric Emblem", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "concept", "degree": 3}, {"id": "assets_logo_text_keyaki_wordmark", "label": "KEYAKI Wordmark", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "KEYAKI Wordmark", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "concept", "degree": 2}, {"id": "assets_logo_text_monochrome_white_design", "label": "Monochrome White Logo Design", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Monochrome White Logo Design", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "concept", "degree": 2}, {"id": "assets_logo_text_transparent_background", "label": "Transparent Background", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Transparent Background", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "concept", "degree": 1}, {"id": "assets_logo_text_logo_lockup", "label": "Keyaki Logo Lockup", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Keyaki Logo Lockup", "community": 7, "community_name": "Logo Lockup Design", "source_file": "assets/logo-text.svg", "file_type": "image", "degree": 3}, {"id": "assets_portrait_blue_reflective_sunglasses", "label": "Round Blue Reflective Sunglasses", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 25.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Round Blue Reflective Sunglasses", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "concept", "degree": 3}, {"id": "assets_portrait_contemplative_pose", "label": "Contemplative Hand-to-Chin Pose", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Contemplative Hand-to-Chin Pose", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "concept", "degree": 2}, {"id": "assets_portrait_dark_textured_jacket", "label": "Dark Textured Jacket", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Dark Textured Jacket", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "concept", "degree": 1}, {"id": "assets_portrait_selective_color_treatment", "label": "Selective-Color Grayscale Treatment", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 20.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Selective-Color Grayscale Treatment", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "concept", "degree": 2}, {"id": "assets_portrait_transparent_cutout", "label": "Transparent-Background Portrait Cutout", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 15.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Transparent-Background Portrait Cutout", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "concept", "degree": 1}, {"id": "assets_portrait_stylized_artist_portrait", "label": "Stylized Artist Portrait", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 35.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Stylized Artist Portrait", "community": 8, "community_name": "Artist Portrait Styling", "source_file": "assets/portrait.png", "file_type": "image", "degree": 5}];
+const RAW_EDGES = [{"from": "js_headertrigger", "to": "js_headertrigger_header", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "js_headertrigger", "to": "js_headertrigger_herobanner", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_keyaki_page", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_keyaki_page", "to": "index_artist_persona", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_keyaki_page", "to": "readme_artist_website", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "index_artist_persona", "to": "index_in_the_box_music_production", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_artist_persona", "to": "index_japanese_edm_community", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_artist_persona", "to": "index_mainstream_edm_artists", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_artist_persona", "to": "index_move_people_through_music", "label": "rationale_for", "title": "rationale_for [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "readme_artist_website", "to": "readme_keyaki", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_compositions_as_adventures", "to": "index_move_people_through_music", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_nature_technology_contrast", "to": "assets_banner_futuristic_city", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_nature_technology_contrast", "to": "assets_banner_mountain_lake", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_futuristic_city", "to": "assets_banner_mountain_lake_cityscape", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_futuristic_city", "to": "assets_banner_mountain_lake", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_futuristic_city", "to": "assets_banner_journey_toward_future", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_lone_traveler", "to": "assets_banner_mountain_lake_cityscape", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_lone_traveler", "to": "assets_banner_journey_toward_future", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_misty_mountains", "to": "assets_banner_mountain_lake_cityscape", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_mountain_lake", "to": "assets_banner_mountain_lake_cityscape", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_mountain_lake_cityscape", "to": "assets_banner_sunbeams", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_harmony_with_nature", "to": "assets_banner_r_forest_guardianship", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_r_harmony_with_nature", "to": "assets_banner_r_ancient_tree", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_r_harmony_with_nature", "to": "assets_banner_r_stag", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_r_harmony_with_nature", "to": "assets_banner_r_young_woman", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_r_ancient_tree", "to": "assets_banner_r_forest_guardian_scene", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_forest_guardian_scene", "to": "assets_banner_r_leaf_adornment", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_forest_guardian_scene", "to": "assets_banner_r_stag", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_forest_guardian_scene", "to": "assets_banner_r_waterfall", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_forest_guardian_scene", "to": "assets_banner_r_young_woman", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_leaf_adornment", "to": "assets_banner_r_young_woman", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_r_young_woman", "to": "assets_banner_r_forest_guardianship", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_modular_geometric_construction", "to": "assets_logo_visual_coherence", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_modular_geometric_construction", "to": "assets_logo_circular_forms", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_modular_geometric_construction", "to": "assets_logo_rectangular_bars", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_modular_geometric_construction", "to": "assets_logo_triangular_terminals", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_abstract_geometric_logo", "to": "assets_logo_white_geometric_wordmark", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_circular_forms", "to": "assets_logo_masked_circular_arcs", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_circular_forms", "to": "assets_logo_white_geometric_wordmark", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_masked_circular_arcs", "to": "assets_logo_white_geometric_wordmark", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_rectangular_bars", "to": "assets_logo_white_geometric_wordmark", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_triangular_terminals", "to": "assets_logo_white_geometric_wordmark", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_white_geometric_wordmark", "to": "assets_logo_visual_coherence", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "index_abgrundkrieg", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_abgrundkrieg", "to": "index_latest_release", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_colourful", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_colourful", "to": "index_latest_release", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_iracema", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_iracema", "to": "index_latest_release", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_latest_release", "to": "index_lichtgarten", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_latest_release", "to": "index_underwater_carnaval", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_lichtgarten", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "index_underwater_carnaval", "to": "index_youtube", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_l_circuit_landscape", "to": "assets_banner_l_banner_image", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_l_circuit_landscape", "to": "assets_banner_l_cyberpunk_aesthetic", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_l_cybernetic_woman", "to": "assets_banner_l_banner_image", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_l_cybernetic_woman", "to": "assets_banner_l_cyberpunk_aesthetic", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_l_cyberpunk_aesthetic", "to": "assets_banner_l_futuristic_city", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_l_flying_vehicles", "to": "assets_banner_l_banner_image", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_banner_l_flying_vehicles", "to": "assets_banner_l_futuristic_city", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_banner_l_futuristic_city", "to": "assets_banner_l_banner_image", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_icon_geometric_glyph", "to": "assets_icon_kanji_keyaki", "label": "conceptually_related_to", "title": "conceptually_related_to [AMBIGUOUS]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "AMBIGUOUS"}, {"from": "assets_icon_geometric_glyph", "to": "assets_icon_vector_icon", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_icon_geometric_glyph", "to": "assets_icon_monochrome_vector_style", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_icon_masked_gradient_fill", "to": "assets_icon_vector_icon", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_icon_masked_gradient_fill", "to": "assets_icon_monochrome_vector_style", "label": "implements", "title": "implements [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_icon_monochrome_vector_style", "to": "assets_icon_square_frame", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_icon_square_frame", "to": "assets_icon_vector_icon", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_text_geometric_construction", "to": "assets_logo_text_geometric_emblem", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_text_geometric_emblem", "to": "assets_logo_text_logo_lockup", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_text_geometric_emblem", "to": "assets_logo_text_keyaki_wordmark", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_logo_text_keyaki_wordmark", "to": "assets_logo_text_logo_lockup", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_text_monochrome_white_design", "to": "assets_logo_text_logo_lockup", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_logo_text_monochrome_white_design", "to": "assets_logo_text_transparent_background", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_portrait_blue_reflective_sunglasses", "to": "assets_portrait_selective_color_treatment", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_portrait_blue_reflective_sunglasses", "to": "assets_portrait_stylized_artist_portrait", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_portrait_blue_reflective_sunglasses", "to": "assets_portrait_contemplative_pose", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "assets_portrait_contemplative_pose", "to": "assets_portrait_stylized_artist_portrait", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_portrait_dark_textured_jacket", "to": "assets_portrait_stylized_artist_portrait", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_portrait_selective_color_treatment", "to": "assets_portrait_stylized_artist_portrait", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "assets_portrait_transparent_cutout", "to": "assets_portrait_stylized_artist_portrait", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}];
+const LEGEND = [{"cid": 0, "color": "#4E79A7", "label": "Artist Story and Identity", "count": 9}, {"cid": 1, "color": "#F28E2B", "label": "Unified Banner Landscape", "count": 8}, {"cid": 2, "color": "#E15759", "label": "Forest Guardian Artwork", "count": 8}, {"cid": 3, "color": "#76B7B2", "label": "Primary Geometric Logo", "count": 8}, {"cid": 4, "color": "#59A14F", "label": "Music Release Collection", "count": 7}, {"cid": 5, "color": "#EDC948", "label": "Legacy Cyberpunk Banner", "count": 6}, {"cid": 6, "color": "#B07AA1", "label": "Framed Header Icon", "count": 6}, {"cid": 7, "color": "#FF9DA7", "label": "Logo Lockup Design", "count": 6}, {"cid": 8, "color": "#9C755F", "label": "Artist Portrait Styling", "count": 6}, {"cid": 9, "color": "#BAB0AC", "label": "Header Scroll Behavior", "count": 3}, {"cid": 10, "color": "#4E79A7", "label": "Glitch Intro Animation", "count": 1}, {"cid": 11, "color": "#F28E2B", "label": "Glitch Animation Library", "count": 1}];
+
+// HTML-escape helper — prevents XSS when injecting graph data into innerHTML
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Build vis datasets
+const nodesDS = new vis.DataSet(RAW_NODES.map(n => ({
+  id: n.id, label: n.label, color: n.color, size: n.size,
+  font: n.font, title: n.title,
+  _community: n.community, _community_name: n.community_name,
+  _source_file: n.source_file, _file_type: n.file_type, _degree: n.degree,
+})));
+
+const edgesDS = new vis.DataSet(RAW_EDGES.map((e, i) => ({
+  id: i, from: e.from, to: e.to,
+  label: '',
+  title: e.title,
+  dashes: e.dashes,
+  width: e.width,
+  color: e.color,
+  arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+})));
+
+const container = document.getElementById('graph');
+const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+  physics: {
+    enabled: true,
+    solver: 'forceAtlas2Based',
+    forceAtlas2Based: {
+      gravitationalConstant: -60,
+      centralGravity: 0.005,
+      springLength: 120,
+      springConstant: 0.08,
+      damping: 0.4,
+      avoidOverlap: 0.8,
+    },
+    stabilization: { iterations: 200, fit: true },
+  },
+  interaction: {
+    hover: true,
+    tooltipDelay: 100,
+    hideEdgesOnDrag: true,
+    navigationButtons: false,
+    keyboard: false,
+  },
+  nodes: { shape: 'dot', borderWidth: 1.5 },
+  edges: { smooth: { type: 'continuous', roundness: 0.2 }, selectionWidth: 3 },
+});
+
+network.once('stabilizationIterationsDone', () => {
+  network.setOptions({ physics: { enabled: false } });
+});
+
+function showInfo(nodeId) {
+  const n = nodesDS.get(nodeId);
+  if (!n) return;
+  const neighborIds = network.getConnectedNodes(nodeId);
+  const neighborItems = neighborIds.map(nid => {
+    const nb = nodesDS.get(nid);
+    const color = nb ? nb.color.background : '#555';
+    return `<span class="neighbor-link" style="border-left-color:${esc(color)}" data-nid="${esc(nid)}">${esc(nb ? nb.label : nid)}</span>`;
+  }).join('');
+  document.getElementById('info-content').innerHTML = `
+    <div class="field"><b>${esc(n.label)}</b></div>
+    <div class="field">Type: ${esc(n._file_type || 'unknown')}</div>
+    <div class="field">Community: ${esc(n._community_name)}</div>
+    <div class="field">Source: ${esc(n._source_file || '-')}</div>
+    <div class="field">Degree: ${n._degree}</div>
+    ${neighborIds.length ? `<div class="field" style="margin-top:8px;color:#aaa;font-size:11px">Neighbors (${neighborIds.length})</div><div id="neighbors-list">${neighborItems}</div>` : ''}
+  `;
+}
+
+function focusNode(nodeId) {
+  network.focus(nodeId, { scale: 1.4, animation: true });
+  network.selectNodes([nodeId]);
+  showInfo(nodeId);
+}
+
+// Neighbor links use a data attribute + one delegated listener rather than an
+// inline onclick. A node id/label sourced from a document or a scraped URL
+// (graphify add) can contain a double-quote; dropping the stringified id
+// unescaped into a quoted onclick both broke every link and allowed a hostile
+// source to inject an event handler into the local report (stored XSS, #1838).
+// esc() on data-nid keeps the value inside the attribute; the listener reads it
+// back verbatim. Bound to document so it survives the innerHTML rebuild that
+// recreates #neighbors-list on each showInfo().
+document.addEventListener('click', e => {
+  const el = e.target.closest('.neighbor-link');
+  if (el && el.dataset.nid !== undefined) focusNode(el.dataset.nid);
+});
+
+// Track hovered node — hover detection is more reliable than click params
+let hoveredNodeId = null;
+network.on('hoverNode', params => {
+  hoveredNodeId = params.node;
+  container.style.cursor = 'pointer';
+});
+network.on('blurNode', () => {
+  hoveredNodeId = null;
+  container.style.cursor = 'default';
+});
+container.addEventListener('click', () => {
+  if (hoveredNodeId !== null) {
+    showInfo(hoveredNodeId);
+    network.selectNodes([hoveredNodeId]);
+  }
+});
+network.on('click', params => {
+  if (params.nodes.length > 0) {
+    showInfo(params.nodes[0]);
+  } else if (hoveredNodeId === null) {
+    document.getElementById('info-content').innerHTML = '<span class="empty">Click a node to inspect it</span>';
+  }
+});
+
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  searchResults.innerHTML = '';
+  if (!q) { searchResults.style.display = 'none'; return; }
+  const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q)).slice(0, 20);
+  if (!matches.length) { searchResults.style.display = 'none'; return; }
+  searchResults.style.display = 'block';
+  matches.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'search-item';
+    el.textContent = n.label;
+    el.style.borderLeft = `3px solid ${n.color.background}`;
+    el.style.paddingLeft = '8px';
+    el.onclick = () => {
+      network.focus(n.id, { scale: 1.5, animation: true });
+      network.selectNodes([n.id]);
+      showInfo(n.id);
+      searchResults.style.display = 'none';
+      searchInput.value = '';
+    };
+    searchResults.appendChild(el);
+  });
+});
+document.addEventListener('click', e => {
+  if (!searchResults.contains(e.target) && e.target !== searchInput)
+    searchResults.style.display = 'none';
+});
+
+const hiddenCommunities = new Set();
+
+const selectAllCb = document.getElementById('select-all-cb');
+
+function updateSelectAllState() {
+  const total = LEGEND.length;
+  const hidden = hiddenCommunities.size;
+  selectAllCb.checked = hidden === 0;
+  selectAllCb.indeterminate = hidden > 0 && hidden < total;
+}
+
+function toggleAllCommunities(hide) {
+  document.querySelectorAll('.legend-item').forEach(item => {
+    hide ? item.classList.add('dimmed') : item.classList.remove('dimmed');
+  });
+  document.querySelectorAll('.legend-cb').forEach(cb => {
+    cb.checked = !hide;
+  });
+  LEGEND.forEach(c => {
+    if (hide) hiddenCommunities.add(c.cid); else hiddenCommunities.delete(c.cid);
+  });
+  const updates = RAW_NODES.map(n => ({ id: n.id, hidden: hide }));
+  nodesDS.update(updates);
+  updateSelectAllState();
+}
+
+const legendEl = document.getElementById('legend');
+LEGEND.forEach(c => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'legend-cb';
+  cb.checked = true;
+  cb.addEventListener('change', (e) => {
+    e.stopPropagation();
+    if (cb.checked) {
+      hiddenCommunities.delete(c.cid);
+      item.classList.remove('dimmed');
+    } else {
+      hiddenCommunities.add(c.cid);
+      item.classList.add('dimmed');
+    }
+    const updates = RAW_NODES
+      .filter(n => n.community === c.cid)
+      .map(n => ({ id: n.id, hidden: !cb.checked }));
+    nodesDS.update(updates);
+    updateSelectAllState();
+  });
+  item.innerHTML = `<div class="legend-dot" style="background:${c.color}"></div>
+    <span class="legend-label">${c.label}</span>
+    <span class="legend-count">${c.count}</span>`;
+  item.prepend(cb);
+  item.onclick = (e) => {
+    if (e.target === cb) return;
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change'));
+  };
+  legendEl.appendChild(item);
+});
+</script>
+<script>
+// Render hyperedges as shaded regions
+const hyperedges = [{"id": "assets_logo_geometric_primitive_system", "label": "Geometric Primitive System", "nodes": ["assets_logo_rectangular_bars", "assets_logo_triangular_terminals", "assets_logo_circular_forms", "assets_logo_masked_circular_arcs"], "relation": "form", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "assets/logo.svg"}, {"id": "assets_logo_text_brand_lockup_composition", "label": "Keyaki Brand Lockup Composition", "nodes": ["assets_logo_text_logo_lockup", "assets_logo_text_geometric_emblem", "assets_logo_text_keyaki_wordmark", "assets_logo_text_monochrome_white_design"], "relation": "form", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "assets/logo-text.svg"}, {"id": "assets_portrait_visual_composition", "label": "Stylized Artist Portrait Composition", "nodes": ["assets_portrait_stylized_artist_portrait", "assets_portrait_selective_color_treatment", "assets_portrait_blue_reflective_sunglasses", "assets_portrait_contemplative_pose", "assets_portrait_dark_textured_jacket", "assets_portrait_transparent_cutout"], "relation": "form", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "assets/portrait.png"}, {"id": "index_artist_musical_influences", "label": "Artist Musical Influences and Production Practice", "nodes": ["index_artist_persona", "index_japanese_edm_community", "index_mainstream_edm_artists", "index_in_the_box_music_production"], "relation": "participate_in", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "index.html"}, {"id": "index_latest_release_collection", "label": "Latest Release Collection", "nodes": ["index_latest_release", "index_iracema", "index_abgrundkrieg", "index_colourful", "index_lichtgarten", "index_underwater_carnaval"], "relation": "form", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "index.html"}, {"id": "assets_banner_l_cyberpunk_scene", "label": "Cyberpunk Science-Fiction Scene", "nodes": ["assets_banner_l_cybernetic_woman", "assets_banner_l_futuristic_city", "assets_banner_l_flying_vehicles", "assets_banner_l_circuit_landscape", "assets_banner_l_cyberpunk_aesthetic"], "relation": "form", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "assets/banner_L.png"}, {"id": "assets_banner_natural_technological_vista", "label": "Natural-Technological Vista", "nodes": ["assets_banner_mountain_lake", "assets_banner_misty_mountains", "assets_banner_futuristic_city", "assets_banner_lone_traveler"], "relation": "form", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "assets/banner.png"}, {"id": "assets_banner_r_woodland_sanctuary", "label": "Woodland Sanctuary", "nodes": ["assets_banner_r_young_woman", "assets_banner_r_ancient_tree", "assets_banner_r_waterfall", "assets_banner_r_stag"], "relation": "form", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "assets/banner_R.png"}, {"id": "assets_icon_brand_mark_composition", "label": "Framed Geometric Brand Mark", "nodes": ["assets_icon_vector_icon", "assets_icon_square_frame", "assets_icon_geometric_glyph", "assets_icon_monochrome_vector_style", "assets_icon_masked_gradient_fill"], "relation": "form", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "assets/icon.svg"}];
+// afterDrawing passes ctx already transformed to network coordinate space.
+// Draw node positions raw — no manual pan/zoom/DPR math needed.
+
+// Andrew's monotone chain. Returns the hull in counter-clockwise order, which
+// is what the perimeter must be traced in. Collinear and duplicate points
+// collapse to the extremes, so degenerate member sets render as a segment
+// rather than a zero-area crossed path.
+function convexHull(pts) {
+    const p = pts.slice().sort((a, b) => (a.x - b.x) || (a.y - b.y));
+    if (p.length < 3) return p;
+    const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+    const build = seq => {
+        const out = [];
+        for (const q of seq) {
+            while (out.length >= 2 && cross(out[out.length - 2], out[out.length - 1], q) <= 0) out.pop();
+            out.push(q);
+        }
+        out.pop();
+        return out;
+    };
+    const hull = build(p).concat(build(p.slice().reverse()));
+    return hull.length >= 3 ? hull : p;
+}
+network.on('afterDrawing', function(ctx) {
+    hyperedges.forEach(h => {
+        const positions = h.nodes
+            .map(nid => network.getPositions([nid])[nid])
+            .filter(p => p !== undefined);
+        if (positions.length < 2) return;
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#6366f1';
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // Centroid and expanded hull in network coordinates.
+        // The perimeter must follow hull order, not h.nodes order: tracing the
+        // raw member order self-intersects whenever the layout does not happen
+        // to place members in angular order, filling as crossed wedges.
+        const cx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+        const cy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+        const hull = convexHull(positions);
+        const expanded = hull.map(p => ({
+            x: cx + (p.x - cx) * 1.15,
+            y: cy + (p.y - cy) * 1.15
+        }));
+        ctx.moveTo(expanded[0].x, expanded[0].y);
+        expanded.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.stroke();
+        // Label
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#4f46e5';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(h.label, cx, cy - 5);
+        ctx.restore();
+    });
+});
+</script>
+</body>
+</html>

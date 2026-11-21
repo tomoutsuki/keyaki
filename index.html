@@ -19,62 +19,126 @@
 
 <body>
 	<header>
-		<nav class="navbar">
+		<nav class="navbar" aria-label="Primary navigation">
 			<ul class="nav-links">
 				<li class="li-L"><a href="#hero">Home</a></li>
 				<li class="li-L"><a href="#about">About</a></li>
-				<img src="./assets/logo-text.svg" class="logo"/>
+				<li class="nav-brand">
+					<a href="#hero" aria-label="Keyaki — back to the top">
+						<img src="./assets/icon.svg" class="header-icon" alt="Keyaki" />
+					</a>
+				</li>
 				<li class="li-R"><a href="#music">Music</a></li>
 				<li class="li-R"><a href="#contact">Contact</a></li>
 			</ul>
 		</nav>
 	</header>
 
-	<section class="hero-banner">
-		<!-- <lottie-player
-			id="introFX"
-			src="./assets/lottie/thunder_1751525363910.json"
-			background="transparent"
-			speed="1"
-			style="display:none; position:absolute; top:20vh; left: 30vw; width:40vw; height:50vh;"
-			loop>
-		</lottie-player> -->
+	<section class="hero-banner" id="hero" aria-labelledby="intro-title">
+		<div class="banner-bg" aria-hidden="true"></div>
+		<div class="hero-vignette" aria-hidden="true"></div>
 
-		<div class="banner-bg banner-left"></div>
-
-		<div class="hero-center">
-			<img src="./assets/logo.svg" class="hero-logo"/>
+		<div class="intro-stage">
 			<div class="hero-text">
-				<h1>WELCOME TO MY WORLD</h1>
-				<div class="buttons">
-					<a href="#music">🎧 Explore My Music</a>
-					<a href="https://youtube.com" target="_blank">🎥 Visit My YouTube</a>
-				</div>
+				<h1 id="intro-title">Welcome to my world</h1>
 			</div>
 		</div>
 
-		<div class="banner-bg banner-right"></div>
+		<div class="hero-center">
+			<div class="hero-brand">
+				<img src="./assets/logo.svg" class="hero-logo" alt="" aria-hidden="true" />
+				<p class="hero-name">KEYAKI</p>
+			</div>
+		</div>
+
+		<a class="hero-scroll" href="#about" aria-label="Scroll to About Me">
+			<span>Discover</span>
+			<i aria-hidden="true"></i>
+		</a>
 	</section>
 
-	<section class="about">
-		<div class="about-img">
-			<img src="artist-portrait.jpg" alt="Artist Portrait" />
-		</div>
-		<div class="about-text">
-			<h2>About Me</h2>
-			<p>学生、作曲家、ロゴ・アーティスト、Web開発者</p>
-			<p>ホビーで作曲をしている大学生。壮大な大自然から遠未来の世界まで、古今東西を音楽で表現することを目指しています。オーケストラからサイバーパンクまで、あらゆる世界を音で描くことを得意とします。</p>
+	<main>
+	<section class="about" id="about">
+		<div class="about-inner">
+			<div class="about-img">
+				<div class="portrait-frame">
+					<img src="./assets/portrait.png" alt="Keyaki in reflective blue glasses" />
+				</div>
+			</div>
+			<div class="about-text">
+				<p class="section-kicker">Behind the sound</p>
+				<h2>About Me</h2>
+				<p class="artist-role">Artist <span>·</span> Engineer <span>·</span> Brand Designer</p>
+				<p>I am a lifelong artist. Inspired by the Japanese EDM community and Mainstream EDM artists, I composed my first piece 12 years ago. Since then, I have immersed myself in in-the-box music production. My only goal is simple: to move people by sharing my vision through my music.</p>
+				<p>I want to immerse people in this majestic nature, breathtaking landscapes, and fantasy worlds filled with long-forgotten legends. Every composition is an adventure, a journey. Every composition is an invitation to experience a glimpse of the wonder I imagine.</p>
+			</div>
 		</div>
 	</section>
 
-	<section class="latest-release">
-		<h2>Latest Release</h2>
-		<div class="release-card">
-			<iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
+	<section class="latest-release" id="music">
+		<div class="release-heading">
+			<div>
+				<p class="section-kicker">Selected tracks</p>
+				<h2>Latest Releases</h2>
+			</div>
+			<p class="release-count" aria-live="polite"><span>01</span> / 05</p>
+		</div>
+
+		<div class="release-carousel" aria-roledescription="carousel" aria-label="Keyaki music releases">
+			<button class="carousel-control carousel-prev" type="button" aria-label="Previous release">
+				<span aria-hidden="true">&#8592;</span>
+			</button>
+
+			<div class="carousel-viewport">
+				<div class="carousel-track">
+					<article class="release-slide" aria-label="1 of 5">
+						<div class="video-frame">
+							<iframe src="https://www.youtube.com/embed/nGIofdfscbs?si=NBOB9YXPkgB7KvTq" title="Keyaki — Iracema" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+						</div>
+						<p><span>01</span> Iracema</p>
+					</article>
+					<article class="release-slide" aria-label="2 of 5" aria-hidden="true">
+						<div class="video-frame">
+							<iframe src="https://www.youtube.com/embed/CU92exaryDU?si=mLReWmAJepoUPOhy" title="Keyaki — Abgrundkrieg" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+						</div>
+						<p><span>02</span> Abgrundkrieg</p>
+					</article>
+					<article class="release-slide" aria-label="3 of 5" aria-hidden="true">
+						<div class="video-frame">
+							<iframe src="https://www.youtube.com/embed/BonRVacrsZM?si=b-sIVct6ZuyVhaej" title="Keyaki — Colourful" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+						</div>
+						<p><span>03</span> Colourful</p>
+					</article>
+					<article class="release-slide" aria-label="4 of 5" aria-hidden="true">
+						<div class="video-frame">
+							<iframe src="https://www.youtube.com/embed/ONjmiapQB7k?si=i2NH7yfpQ7QVma8W" title="Keyaki — Lichtgarten" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+						</div>
+						<p><span>04</span> Lichtgarten</p>
+					</article>
+					<article class="release-slide" aria-label="5 of 5" aria-hidden="true">
+						<div class="video-frame">
+							<iframe src="https://www.youtube.com/embed/RauS91OSjb0?si=POdxDi7_mv-t9EmE" title="Keyaki — Underwater Carnaval" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+						</div>
+						<p><span>05</span> Underwater Carnaval</p>
+					</article>
+				</div>
+			</div>
+
+			<button class="carousel-control carousel-next" type="button" aria-label="Next release">
+				<span aria-hidden="true">&#8594;</span>
+			</button>
+
+			<div class="carousel-dots" aria-label="Choose a release"></div>
 		</div>
 	</section>
+	</main>
 
-	<!--<script src="./js/headerTrigger.js"></script>-->
+	<footer id="contact">
+		<img src="./assets/icon.svg" alt="" aria-hidden="true" />
+		<p>Keyaki</p>
+		<a href="#hero">Back to top</a>
+	</footer>
+
 	<script src="./js/index.js"></script>
 	<script src="./js/powerglitch.min.js"></script>
 </body>
