@@ -50,12 +50,12 @@ function startSectionGlitches() {
 		},
 		glitchTimeSpan: {
 			start: 0,
-			end: 0.15,
+			end: 0.1,
 		},
 		shake: {
-			velocity: 2,
-			amplitudeX: 0.1,
-			amplitudeY: 0.1,
+			velocity: 1,
+			amplitudeX: 0.05,
+			amplitudeY: 0.05,
 		},
 		slice: {
 			count: 1,
@@ -67,10 +67,12 @@ function startSectionGlitches() {
 		pulse: false,
 	};
 
-	window.PowerGlitch.glitch(
-		".about-text h2, .latest-release h2, .contact h2",
-		repeatingGlitchOptions,
-	);
+	// H2 Glitch Effect
+	
+	// window.PowerGlitch.glitch(
+	// 	".about-text h2, .latest-release h2, .contact h2",
+	// 	repeatingGlitchOptions,
+	// );
 
 	window.PowerGlitch.glitch(".about-image-glitch", {
 		...repeatingGlitchOptions,

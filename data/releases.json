@@ -4,16 +4,28 @@
     "youtubeEmbedUrl": "https://www.youtube.com/embed/nGIofdfscbs?si=NBOB9YXPkgB7KvTq",
     "distributionLinks": [
       {
-        "platform": "amazon",
-        "url": "https://music.amazon.com/search/Keyaki%20Iracema"
+        "platform": "spotify",
+        "url": "https://open.spotify.com/intl-ja/album/3ojZN20f7SCW8UNYTqMrWw"
       },
       {
-        "platform": "spotify",
-        "url": "https://open.spotify.com/search/Keyaki%20Iracema"
+        "platform": "soundcloud",
+        "url": "https://on.soundcloud.com/Ei7NSkOAWhSvflDPEf"
       },
       {
         "platform": "youtubeMusic",
-        "url": "https://music.youtube.com/search?q=Keyaki%20Iracema"
+        "url": "https://music.youtube.com/watch?v=H3m36B1dOoA"
+      },
+      {
+        "platform": "deezer",
+        "url": "https://www.deezer.com/pt/album/1073671232"
+      },
+      {
+        "platform": "appleMusic",
+        "url": "https://music.apple.com/br/album/iracema/6809751491?i=6809751496"
+      },
+      {
+        "platform": "amazon",
+        "url": "https://music.amazon.com/search/Keyaki%20Iracema"
       }
     ]
   },
@@ -22,13 +34,14 @@
     "youtubeEmbedUrl": "https://www.youtube.com/embed/CU92exaryDU?si=mLReWmAJepoUPOhy",
     "distributionLinks": [
       {
-        "platform": "soundcloud",
-        "url": "https://soundcloud.com/search?q=Keyaki%20Abgrundkrieg"
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/watch?v=CU92exaryDU"
       },
       {
-        "platform": "youtubeMusic",
-        "url": "https://music.youtube.com/search?q=Keyaki%20Abgrundkrieg"
+        "platform": "soundcloud",
+        "url": "https://soundcloud.com/search?q=Keyaki%20Abgrundkrieg"
       }
+      
     ]
   },
   {

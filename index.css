@@ -446,10 +446,12 @@ header {
 .latest-release {
 	position: relative;
 	overflow: hidden;
-	padding: 7rem max(1.5rem, 6vw) 8rem;
+	padding: 10vh 15vw 10vh 15vw; 
 	background:
 		linear-gradient(180deg, rgba(38, 39, 39, 0.72), rgba(15, 16, 17, 0.92) 38%, #0f1011 100%),
 		url("./assets/dark_bg.jpg") center center / cover no-repeat;
+
+		
 }
 
 .section-kicker {
