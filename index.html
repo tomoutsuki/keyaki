@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Keyaki</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Unica+One&display=swap" rel="stylesheet">
+	
+	<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+	<link rel="stylesheet" href="./reset.css">
+	<link rel="stylesheet" href="./index.css">
+</head>
+
+
+<body>
+	<header>
+		<nav class="navbar" aria-label="Primary navigation">
+			<ul class="nav-links">
+				<li class="li-L"><a href="#hero">Home</a></li>
+				<li class="li-L"><a href="#about">About</a></li>
+				<li class="nav-brand">
+					<a href="#hero" aria-label="Keyaki — back to the top">
+						<img src="./assets/icon.svg" class="header-icon" alt="Keyaki" />
+					</a>
+				</li>
+				<li class="li-R"><a href="#music">Music</a></li>
+				<li class="li-R"><a href="#contact">Contact</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<section class="hero-banner" id="hero" aria-labelledby="intro-title">
+		<div class="banner-bg" aria-hidden="true"></div>
+		<div class="hero-vignette" aria-hidden="true"></div>
+
+		<div class="intro-stage">
+			<div class="hero-text">
+				<h1 id="intro-title">Welcome to my world</h1>
+			</div>
+		</div>
+
+		<div class="hero-center">
+			<div class="hero-brand">
+				<img src="./assets/logo.svg" class="hero-logo" alt="" aria-hidden="true" />
+				<p class="hero-name">KEYAKI</p>
+			</div>
+		</div>
+
+		<a class="hero-scroll" href="#about" aria-label="Scroll to About Me">
+			<span>Discover</span>
+			<i aria-hidden="true"></i>
+		</a>
+	</section>
+
+	<main>
+		<section class="about" id="about">
+			<div class="about-text">
+				<h2>About Me</h2>
+				<p class="artist-role">Artist <span>·</span> Engineer <span>·</span> Brand Designer</p>
+				<p>I am a lifelong artist, inspired by hundred of my fellow artists.</p>
+				<p>I want to immerse people in this majestic nature, breathtaking landscapes, and fantasy worlds filled with long-forgotten legends. Every composition is an adventure, a journey. Every composition is an invitation to experience a glimpse of the wonder I imagine.</p>
+
+				<nav class="social-links" aria-label="Find Keyaki on social media">
+					<a href="https://www.instagram.com/keyaki.mp3/" target="_blank" rel="noopener noreferrer" aria-label="Find Keyaki on Instagram">
+						<img src="./assets/icons/instagram.svg" alt="" aria-hidden="true" />
+					</a>
+					<a href="https://x.com/KeyakiSounds" target="_blank" rel="noopener noreferrer" aria-label="Find Keyaki on X">
+						<img src="./assets/icons/x.svg" alt="" aria-hidden="true" />
+					</a>
+					<a href="https://www.youtube.com/@KeyakiOfficial?sub_confirmation=1" target="_blank" rel="noopener noreferrer" aria-label="Keyaki on YouTube">
+						<img src="./assets/icons/youtube.svg" alt="" aria-hidden="true" />
+					</a>
+					<a href="https://open.spotify.com/intl-ja/artist/5mWaxIIOccUPaa0j82CQwr" target="_blank" rel="noopener noreferrer" aria-label="Find Keyaki on Spotify">
+						<img src="./assets/icons/spotify.svg" alt="" aria-hidden="true" />
+					</a>
+					<a href="https://soundcloud.com/keyaki_official" target="_blank" rel="noopener noreferrer" aria-label="Find Keyaki on SoundCloud">
+						<img src="./assets/icons/soundcloud.svg" alt="" aria-hidden="true" />
+					</a>
+				</nav>
+			</div>
+			
+			<div class="about-image-glitch">
+				<img class="about-img" src="./assets/portrait.png" alt="Keyaki in reflective blue glasses" />
+			</div>
+			
+		</section>
+
+		<section class="latest-release" id="music">
+			<div class="release-heading">
+				<div>
+					<p class="section-kicker">Selected tracks</p>
+					<h2>Latest Releases</h2>
+				</div>
+				<p class="release-count" aria-live="polite"><span>00</span> / <b>00</b></p>
+			</div>
+
+			<div class="release-carousel" aria-roledescription="carousel" aria-label="Keyaki music releases" aria-busy="true" tabindex="0">
+				<div class="release-platforms">
+					<p>Listen on</p>
+					<div class="release-platform-links" aria-live="polite" aria-atomic="true">
+						<span class="platform-status">Loading releases…</span>
+					</div>
+				</div>
+
+				<button class="carousel-control carousel-prev" type="button" aria-label="Previous release" disabled>
+					<span aria-hidden="true">&#8592;</span>
+				</button>
+
+				<div class="carousel-viewport">
+					<div class="carousel-track">
+						<p class="carousel-status">Loading the latest releases…</p>
+					</div>
+				</div>
+
+				<button class="carousel-control carousel-next" type="button" aria-label="Next release" disabled>
+					<span aria-hidden="true">&#8594;</span>
+				</button>
+
+				<div class="carousel-dots" aria-label="Choose a release"></div>
+			</div>
+		</section>
+
+		<section class="contact" id="contact">
+			<div class="contact-text">
+				<p class="section-kicker">Start a conversation</p>
+				<h2>Contact</h2>
+				<p>Have a project, collaboration, or idea in mind? Send me the details and I will get back to you.</p>
+				<a class="contact-link" href="https://forms.gle/2bCe5ytZov47Hk2UA" target="_blank" rel="noopener noreferrer">
+					Open contact form <span aria-hidden="true">&#8599;</span>
+				</a>
+			</div>
+		</section>
+	</main>
+
+	<footer>
+		<img src="./assets/icon.svg" alt="" aria-hidden="true" />
+		<p>Keyaki</p>
+		<a href="#hero">Back to top</a>
+	</footer>
+
+	<script src="./js/index.js"></script>
+	<script src="./js/powerglitch.min.js"></script>
+</body>
+</html>

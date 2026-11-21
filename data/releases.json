@@ -1,0 +1,105 @@
+[
+  {
+    "title": "Iracema",
+    "youtubeEmbedUrl": "https://www.youtube.com/embed/nGIofdfscbs?si=NBOB9YXPkgB7KvTq",
+    "distributionLinks": [
+      {
+        "platform": "spotify",
+        "url": "https://open.spotify.com/intl-ja/album/3ojZN20f7SCW8UNYTqMrWw"
+      },
+      {
+        "platform": "soundcloud",
+        "url": "https://on.soundcloud.com/Ei7NSkOAWhSvflDPEf"
+      },
+      {
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/watch?v=H3m36B1dOoA"
+      },
+      {
+        "platform": "deezer",
+        "url": "https://www.deezer.com/pt/album/1073671232"
+      },
+      {
+        "platform": "appleMusic",
+        "url": "https://music.apple.com/br/album/iracema/6809751491?i=6809751496"
+      },
+      {
+        "platform": "amazon",
+        "url": "https://music.amazon.com/search/Keyaki%20Iracema"
+      }
+    ]
+  },
+  {
+    "title": "Abgrundkrieg",
+    "youtubeEmbedUrl": "https://www.youtube.com/embed/CU92exaryDU?si=mLReWmAJepoUPOhy",
+    "distributionLinks": [
+      {
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/watch?v=CU92exaryDU"
+      },
+      {
+        "platform": "soundcloud",
+        "url": "https://soundcloud.com/search?q=Keyaki%20Abgrundkrieg"
+      }
+      
+    ]
+  },
+  {
+    "title": "Colourful",
+    "youtubeEmbedUrl": "https://www.youtube.com/embed/BonRVacrsZM?si=b-sIVct6ZuyVhaej",
+    "distributionLinks": [
+      {
+        "platform": "spotify",
+        "url": "https://open.spotify.com/search/Keyaki%20Colourful"
+      },
+      {
+        "platform": "deezer",
+        "url": "https://www.deezer.com/search/Keyaki%20Colourful"
+      },
+      {
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/search?q=Keyaki%20Colourful"
+      }
+    ]
+  },
+  {
+    "title": "Lichtgarten",
+    "youtubeEmbedUrl": "https://www.youtube.com/embed/ONjmiapQB7k?si=i2NH7yfpQ7QVma8W",
+    "distributionLinks": [
+      {
+        "platform": "tidal",
+        "url": "https://listen.tidal.com/search?q=Keyaki%20Lichtgarten"
+      },
+      {
+        "platform": "spotify",
+        "url": "https://open.spotify.com/search/Keyaki%20Lichtgarten"
+      },
+      {
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/search?q=Keyaki%20Lichtgarten"
+      }
+    ]
+  },
+  {
+    "title": "Underwater Carnaval",
+    "youtubeEmbedUrl": "https://www.youtube.com/embed/RauS91OSjb0?si=POdxDi7_mv-t9EmE",
+    "distributionLinks": [
+      {
+        "platform": "amazon",
+        "url": "https://music.amazon.com/search/Keyaki%20Underwater%20Carnaval"
+      },
+      {
+        "platform": "deezer",
+        "url": "https://www.deezer.com/search/Keyaki%20Underwater%20Carnaval"
+      },
+      {
+        "platform": "soundcloud",
+        "url": "https://soundcloud.com/search?q=Keyaki%20Underwater%20Carnaval"
+      },
+      {
+        "platform": "youtubeMusic",
+        "url": "https://music.youtube.com/search?q=Keyaki%20Underwater%20Carnaval"
+      }
+    ]
+  }
+]
