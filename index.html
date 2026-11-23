@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Keyaki</title>
+	<title>Keyaki - Eectronic Music Artist | Official Website</title>
 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,19 @@
 </head>
 
 
-<body>
+<body class="fonts-loading">
+	<div class="font-loader" role="status" aria-live="polite">
+		<span class="font-loader-mark" aria-hidden="true"></span>
+		<p>Loading Keyaki</p>
+	</div>
+
+	<noscript>
+		<style>
+			.font-loader { display: none; }
+			.fonts-loading header, .fonts-loading .hero-banner, .fonts-loading main, .fonts-loading footer { visibility: visible; }
+		</style>
+	</noscript>
+
 	<header>
 		<nav class="navbar" aria-label="Primary navigation">
 			<ul class="nav-links">
@@ -36,8 +48,23 @@
 	</header>
 
 	<section class="hero-banner" id="hero" aria-labelledby="intro-title">
+		<div class="soundcloud-embed" aria-hidden="true">
+			<iframe
+				id="soundcloud-player"
+				title="Iracema by Keyaki on SoundCloud"
+				width="1"
+				height="1"
+				scrolling="no"
+				frameborder="0"
+				allow="autoplay; encrypted-media"
+				tabindex="-1"
+				src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2395841883&amp;color=%2369aefc&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_user=false&amp;show_reposts=false&amp;show_teaser=false&amp;visual=false">
+			</iframe>
+		</div>
+
 		<div class="banner-bg" aria-hidden="true"></div>
 		<div class="hero-vignette" aria-hidden="true"></div>
+		<canvas class="hero-wave" aria-hidden="true"></canvas>
 
 		<div class="intro-stage">
 			<div class="hero-text">
@@ -49,6 +76,28 @@
 			<div class="hero-brand">
 				<img src="./assets/logo.svg" class="hero-logo" alt="" aria-hidden="true" />
 				<p class="hero-name">KEYAKI</p>
+				<div class="hero-player" aria-label="Iracema music player">
+					<button class="hero-player-toggle" type="button" aria-label="Play Iracema" aria-pressed="false" disabled>
+						<span class="hero-player-icon" aria-hidden="true">
+							<i></i>
+							<b></b>
+						</span>
+					</button>
+					<div class="hero-player-body" aria-hidden="true">
+						<div class="hero-player-meta">
+							<span class="hero-player-status" aria-live="polite">Loading audio</span>
+							<a href="https://soundcloud.com/keyaki_official/iracema" target="_blank" rel="noopener noreferrer">Iracema · SoundCloud</a>
+						</div>
+						<div class="hero-player-controls" role="group" aria-label="Playback controls">
+							<output class="hero-player-current" for="hero-player-seek">0:00</output>
+							<input id="hero-player-seek" class="hero-player-range hero-player-seek" type="range" min="0" max="326900" value="0" step="100" aria-label="Seek Iracema" disabled>
+							<span class="hero-player-duration">--:--</span>
+							<span class="hero-player-volume-label" aria-hidden="true">Vol</span>
+							<input id="hero-player-volume" class="hero-player-range hero-player-volume" type="range" min="0" max="100" value="100" step="1" aria-label="Iracema volume" disabled>
+							<output class="hero-player-volume-output" for="hero-player-volume">100</output>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -62,7 +111,7 @@
 		<section class="about" id="about">
 			<div class="about-text">
 				<h2>About Me</h2>
-				<p class="artist-role">Artist <span>·</span> Engineer <span>·</span> Brand Designer</p>
+				<p class="artist-greetings">Hi there, I am Keyaki.</p>
 				<p>I am a lifelong artist, inspired by hundred of my fellow artists.</p>
 				<p>I want to immerse people in this majestic nature, breathtaking landscapes, and fantasy worlds filled with long-forgotten legends. Every composition is an adventure, a journey. Every composition is an invitation to experience a glimpse of the wonder I imagine.</p>
 
@@ -144,6 +193,7 @@
 		<a href="#hero">Back to top</a>
 	</footer>
 
+	<script id="soundcloud-widget-api" src="https://w.soundcloud.com/player/api.js" async></script>
 	<script src="./js/index.js"></script>
 	<script src="./js/powerglitch.min.js"></script>
 </body>
