@@ -1,4 +1,6 @@
 const RELEASES_URL = "./data/releases.json";
+const BASS_MAP_URL = "./data/iracema_bassMap.csv";
+const MAX_BASS_LEVEL = 15;
 
 const PLATFORM_DETAILS = {
 	amazon: {
@@ -31,11 +33,430 @@ const PLATFORM_DETAILS = {
 	},
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+	initHeroPlayer();
+	initReleaseCarousel();
+
+	await waitForSiteFonts().catch((error) => console.warn("Unable to confirm site fonts:", error));
+	revealSite();
 	startHeroIntro();
 	startSectionGlitches();
-	initReleaseCarousel();
 });
+
+async function waitForSiteFonts() {
+	if (!document.fonts) {
+		return;
+	}
+
+	await Promise.allSettled([
+		document.fonts.load('400 1em "Bruno Ace SC"'),
+		document.fonts.load('400 1em "Unica One"'),
+		document.fonts.load('400 1em "Open Sans"'),
+		document.fonts.ready,
+	]);
+}
+
+function revealSite() {
+	const loader = document.querySelector(".font-loader");
+	document.body.classList.remove("fonts-loading");
+	loader?.setAttribute("aria-hidden", "true");
+}
+
+function initHeroPlayer() {
+	const heroBanner = document.querySelector(".hero-banner");
+	const iframe = document.querySelector("#soundcloud-player");
+	const apiScript = document.querySelector("#soundcloud-widget-api");
+	const player = document.querySelector(".hero-player");
+	const playerBody = document.querySelector(".hero-player-body");
+	const toggleButton = document.querySelector(".hero-player-toggle");
+	const status = document.querySelector(".hero-player-status");
+	const waveCanvas = document.querySelector(".hero-wave");
+	const seekInput = document.querySelector(".hero-player-seek");
+	const currentTime = document.querySelector(".hero-player-current");
+	const durationTime = document.querySelector(".hero-player-duration");
+	const volumeInput = document.querySelector(".hero-player-volume");
+	const volumeOutput = document.querySelector(".hero-player-volume-output");
+
+	if (
+		!heroBanner || !iframe || !player || !playerBody || !toggleButton || !status || !waveCanvas
+		|| !seekInput || !currentTime || !durationTime || !volumeInput || !volumeOutput
+	) {
+		return;
+	}
+
+	const wave = createHeroWave(waveCanvas);
+	let widget;
+	let widgetReady = false;
+	let isPlaying = false;
+	let connected = false;
+	let isScrubbing = false;
+	let trackDuration = Number(seekInput.max);
+	const apiTimeout = window.setTimeout(() => {
+		if (!connected) {
+			markUnavailable();
+		}
+	}, 12000);
+
+	loadBassMap()
+		.then((volumeMap) => wave.setVolumeMap(volumeMap))
+		.catch((error) => console.warn("Unable to load the Iracema bass map:", error));
+	syncPosition(0, true);
+	setVolumeDisplay(Number(volumeInput.value));
+
+	function formatTime(milliseconds) {
+		const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = String(totalSeconds % 60).padStart(2, "0");
+		return `${minutes}:${seconds}`;
+	}
+
+	function updateRangeFill(input) {
+		const minimum = Number(input.min) || 0;
+		const maximum = Number(input.max) || 1;
+		const value = Number(input.value) || 0;
+		const progress = ((value - minimum) / Math.max(1, maximum - minimum)) * 100;
+		input.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
+	}
+
+	function syncPosition(position, forceControl = false) {
+		if (!Number.isFinite(position) || (isScrubbing && !forceControl)) {
+			return;
+		}
+
+		const maximum = trackDuration || Number(seekInput.max);
+		const clampedPosition = Math.max(0, Math.min(maximum, position));
+		wave.setPosition(clampedPosition);
+		seekInput.value = String(clampedPosition);
+		seekInput.setAttribute("aria-valuetext", formatTime(clampedPosition));
+		currentTime.value = formatTime(clampedPosition);
+		updateRangeFill(seekInput);
+	}
+
+	function setVolumeDisplay(volume) {
+		const clampedVolume = Math.max(0, Math.min(100, Math.round(volume)));
+		volumeInput.value = String(clampedVolume);
+		volumeInput.setAttribute("aria-valuetext", `${clampedVolume}%`);
+		volumeOutput.value = String(clampedVolume);
+		updateRangeFill(volumeInput);
+	}
+
+	function expandPlayer() {
+		player.classList.add("is-expanded");
+		playerBody.setAttribute("aria-hidden", "false");
+	}
+
+	function setPlayingState(playing) {
+		if (playing) {
+			expandPlayer();
+		}
+
+		isPlaying = playing;
+		toggleButton.classList.toggle("is-playing", playing);
+		toggleButton.setAttribute("aria-pressed", String(playing));
+		toggleButton.setAttribute("aria-label", `${playing ? "Pause" : "Play"} Iracema`);
+		status.textContent = playing ? "Now playing" : "Ready to play";
+		heroBanner.classList.toggle("is-audio-playing", playing);
+		wave.setPlaying(playing);
+	}
+
+	function updatePosition(event) {
+		if (Number.isFinite(event?.currentPosition)) {
+			syncPosition(event.currentPosition);
+		}
+	}
+
+	function markUnavailable() {
+		widgetReady = false;
+		setPlayingState(false);
+		toggleButton.disabled = true;
+		seekInput.disabled = true;
+		volumeInput.disabled = true;
+		status.textContent = "Audio unavailable";
+	}
+
+	function connectWidget() {
+		if (connected || !window.SC?.Widget) {
+			return;
+		}
+
+		connected = true;
+		window.clearTimeout(apiTimeout);
+		widget = window.SC.Widget(iframe);
+		const events = window.SC.Widget.Events;
+
+		widget.bind(events.READY, () => {
+			widgetReady = true;
+			syncPosition(0, true);
+			toggleButton.disabled = false;
+			seekInput.disabled = false;
+			volumeInput.disabled = false;
+			status.textContent = "Ready to play";
+
+			widget.getDuration((duration) => {
+				if (!Number.isFinite(duration) || duration <= 0) {
+					return;
+				}
+
+				trackDuration = duration;
+				seekInput.max = String(duration);
+				durationTime.textContent = formatTime(duration);
+				syncPosition(0, true);
+			});
+			widget.getVolume((volume) => {
+				if (Number.isFinite(volume)) {
+					setVolumeDisplay(volume);
+				}
+			});
+		});
+
+		widget.bind(events.PLAY, () => {
+			setPlayingState(true);
+			widget.getPosition((position) => syncPosition(position));
+		});
+		widget.bind(events.PLAY_PROGRESS, updatePosition);
+		widget.bind(events.SEEK, updatePosition);
+		widget.bind(events.PAUSE, () => {
+			setPlayingState(false);
+			widget.getPosition((position) => syncPosition(position));
+		});
+		widget.bind(events.FINISH, () => {
+			setPlayingState(false);
+			syncPosition(0, true);
+		});
+		widget.bind(events.ERROR, markUnavailable);
+	}
+
+	toggleButton.addEventListener("click", () => {
+		if (!widgetReady || !widget) {
+			return;
+		}
+
+		if (isPlaying) {
+			widget.pause();
+		} else {
+			expandPlayer();
+			widget.play();
+		}
+	});
+
+	seekInput.addEventListener("input", () => {
+		isScrubbing = true;
+		syncPosition(Number(seekInput.value), true);
+	});
+
+	seekInput.addEventListener("change", () => {
+		if (!widgetReady || !widget) {
+			return;
+		}
+
+		const position = Number(seekInput.value);
+		isScrubbing = false;
+		widget.seekTo(position);
+		syncPosition(position, true);
+	});
+
+	seekInput.addEventListener("pointercancel", () => {
+		isScrubbing = false;
+		widget?.getPosition((position) => syncPosition(position, true));
+	});
+
+	volumeInput.addEventListener("input", () => {
+		const volume = Number(volumeInput.value);
+		setVolumeDisplay(volume);
+
+		if (widgetReady && widget) {
+			widget.setVolume(volume);
+		}
+	});
+
+	if (window.SC?.Widget) {
+		connectWidget();
+	} else {
+		apiScript?.addEventListener("load", connectWidget, { once: true });
+		apiScript?.addEventListener("error", markUnavailable, { once: true });
+	}
+}
+
+async function loadBassMap() {
+	const response = await fetch(BASS_MAP_URL);
+
+	if (!response.ok) {
+		throw new Error(`Bass map request failed with status ${response.status}`);
+	}
+
+	return (await response.text())
+		.trim()
+		.split(/\r?\n/)
+		.slice(1)
+		.map((row) => {
+			const [startMs, level] = row.split(",").map(Number);
+			return { startMs, level };
+		})
+		.filter(({ startMs, level }) => Number.isFinite(startMs) && Number.isFinite(level))
+		.sort((a, b) => a.startMs - b.startMs);
+}
+
+function createHeroWave(canvas) {
+	const context = canvas.getContext("2d");
+	const volumeTransitionMs = 100;
+	const waveFunctions = [
+		{ cycles: 1.7, amplitude: 1, opacity: 0.82, offset: 0 },
+		{ cycles: 2.35, amplitude: 0.68, opacity: 0.5, offset: Math.PI / 3 },
+		{ cycles: 3.1, amplitude: 0.43, opacity: 0.34, offset: Math.PI * 0.72 },
+	];
+	let volumeMap = [{ startMs: 0, level: 0 }];
+	let basePosition = 0;
+	let positionUpdatedAt = performance.now();
+	let currentLevel = 0;
+	let playing = false;
+	let horizontalOffset = 0;
+	let animationFrame = 0;
+	let previousFrame = performance.now();
+	let width = 0;
+	let height = 0;
+
+	function resize() {
+		const bounds = canvas.getBoundingClientRect();
+		const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+		width = Math.max(1, bounds.width);
+		height = Math.max(1, bounds.height);
+		canvas.width = Math.round(width * pixelRatio);
+		canvas.height = Math.round(height * pixelRatio);
+		context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+		if (playing) {
+			draw();
+		}
+	}
+
+	function getVolumeLevel(position) {
+		let low = 0;
+		let high = volumeMap.length - 1;
+		let match = 0;
+
+		while (low <= high) {
+			const middle = Math.floor((low + high) / 2);
+
+			if (volumeMap[middle].startMs <= position) {
+				match = middle;
+				low = middle + 1;
+			} else {
+				high = middle - 1;
+			}
+		}
+
+		const currentChange = volumeMap[match];
+		const previousLevel = volumeMap[match - 1]?.level ?? currentChange.level;
+		const transitionProgress = Math.max(
+			0,
+			Math.min(1, (position - currentChange.startMs) / volumeTransitionMs),
+		);
+		const easedProgress = transitionProgress * transitionProgress * (3 - (2 * transitionProgress));
+		const interpolatedLevel = previousLevel
+			+ ((currentChange.level - previousLevel) * easedProgress);
+
+		return Math.max(0, Math.min(MAX_BASS_LEVEL, interpolatedLevel));
+	}
+
+	function getPosition(now) {
+		return basePosition + (playing ? now - positionUpdatedAt : 0);
+	}
+
+	function draw() {
+		context.clearRect(0, 0, width, height);
+
+		const centerY = height / 2;
+		const volumeRatio = currentLevel / MAX_BASS_LEVEL;
+		const minimumAmplitude = 5;
+		const maximumAmplitude = Math.max(minimumAmplitude, (height / 2) - 2);
+		const amplitude = minimumAmplitude
+			+ (volumeRatio * (maximumAmplitude - minimumAmplitude));
+		const gradient = context.createLinearGradient(0, 0, width, 0);
+		gradient.addColorStop(0, "rgba(105, 174, 252, 0)");
+		gradient.addColorStop(0.16, "rgba(105, 174, 252, 0.9)");
+		gradient.addColorStop(0.5, "rgba(244, 247, 247, 0.95)");
+		gradient.addColorStop(0.84, "rgba(169, 248, 145, 0.82)");
+		gradient.addColorStop(1, "rgba(169, 248, 145, 0)");
+		context.strokeStyle = gradient;
+		context.lineWidth = 1.5;
+		context.globalCompositeOperation = "lighter";
+
+		waveFunctions.forEach((waveFunction) => {
+			context.beginPath();
+			context.globalAlpha = waveFunction.opacity;
+
+			for (let x = 0; x <= width; x += 3) {
+				const angle = (((x / width) - horizontalOffset) * Math.PI * 2 * waveFunction.cycles)
+					+ waveFunction.offset;
+				const y = centerY + (Math.sin(angle) * amplitude * waveFunction.amplitude);
+
+				if (x === 0) {
+					context.moveTo(x, y);
+				} else {
+					context.lineTo(x, y);
+				}
+			}
+
+			context.stroke();
+		});
+
+		context.globalAlpha = 1;
+		context.globalCompositeOperation = "source-over";
+	}
+
+	function animate(now) {
+		if (!playing) {
+			return;
+		}
+
+		const elapsedSeconds = Math.min((now - previousFrame) / 1000, 0.05);
+		currentLevel = getVolumeLevel(getPosition(now));
+		const volumeRatio = currentLevel / MAX_BASS_LEVEL;
+		const travelSpeed = 0.22 + (volumeRatio * 1.20);
+		horizontalOffset += elapsedSeconds * travelSpeed;
+		previousFrame = now;
+		draw();
+		animationFrame = window.requestAnimationFrame(animate);
+	}
+
+	resize();
+
+	if (window.ResizeObserver) {
+		new ResizeObserver(resize).observe(canvas);
+	} else {
+		window.addEventListener("resize", resize);
+	}
+
+	return {
+		setVolumeMap(nextVolumeMap) {
+			if (nextVolumeMap.length) {
+				volumeMap = nextVolumeMap;
+			}
+		},
+		setPosition(position) {
+			if (!Number.isFinite(position)) {
+				return;
+			}
+
+			basePosition = position;
+			positionUpdatedAt = performance.now();
+		},
+		setPlaying(nextPlaying) {
+			playing = nextPlaying;
+			window.cancelAnimationFrame(animationFrame);
+			positionUpdatedAt = performance.now();
+
+			if (!playing) {
+				return;
+			}
+
+			currentLevel = getVolumeLevel(basePosition);
+			previousFrame = performance.now();
+
+			animationFrame = window.requestAnimationFrame(animate);
+		},
+	};
+}
 
 function startSectionGlitches() {
 	if (!window.PowerGlitch) {
