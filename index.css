@@ -227,7 +227,7 @@ header {
 
 .banner-bg {
 	z-index: -3;
-	background-image: url("./assets/banner.png");
+	background-image: url("./assets/banner.webp");
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: cover;
@@ -328,7 +328,7 @@ header {
 	color: #fff;
 }
 
-.hero-text h1 {
+.hero-intro {
 	display: none;
 	align-items: center;
 	justify-content: center;
@@ -671,7 +671,7 @@ header {
 .about {
 	position: relative;
 	overflow: hidden;
-	background: linear-gradient(180deg, #26272777, #0f1011cc 30%), url("./assets/dark_bg.jpg") center center no-repeat;
+	background: linear-gradient(180deg, #26272777, #0f1011cc 30%), url("./assets/dark_bg.webp") center center no-repeat;
 	background-size: cover;
 	min-height: 47rem;
 	padding-right: 40vw;
@@ -780,7 +780,7 @@ header {
 	padding: 10vh 15vw 10vh 15vw; 
 	background:
 		linear-gradient(180deg, rgba(38, 39, 39, 0.72), rgba(15, 16, 17, 0.92) 38%, #0f1011 100%),
-		url("./assets/dark_bg.jpg") center center / cover no-repeat;
+		url("./assets/dark_bg.webp") center center / cover no-repeat;
 
 		
 }
@@ -1023,7 +1023,7 @@ header {
 	overflow: hidden;
 	background:
 		linear-gradient(180deg, rgba(15, 16, 17, 0.96), rgba(6, 8, 9, 0.78)),
-		url("./assets/dark_bg.jpg") center 64% / cover no-repeat;
+		url("./assets/dark_bg.webp") center 64% / cover no-repeat;
 }
 
 .contact::before {
@@ -1208,7 +1208,7 @@ footer a:hover {
 		background-position: 54% center;
 	}
 
-	.hero-text h1 {
+	.hero-intro {
 		font-size: clamp(1.1rem, 6vw, 1.65rem);
 		letter-spacing: 0.09em;
 	}

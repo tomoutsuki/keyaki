@@ -520,7 +520,7 @@ function startHeroIntro() {
 	const heroLogo = document.querySelector(".hero-logo");
 
 	setTimeout(() => {
-		const title = document.querySelector(".hero-text h1");
+		const title = document.querySelector(".hero-intro");
 
 		if (!title) {
 			return;
