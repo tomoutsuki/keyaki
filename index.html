@@ -95,7 +95,13 @@
 
 	<header>
 		<nav class="navbar" aria-label="Primary navigation">
-			<ul class="nav-links">
+			<a class="mobile-nav-brand" href="#hero" aria-label="Keyaki — back to the top">
+				<img src="./assets/icon.svg" class="header-icon" alt="" aria-hidden="true" />
+			</a>
+			<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open navigation menu">
+				<img src="./assets/icons/hamburger.svg" alt="" aria-hidden="true" />
+			</button>
+			<ul class="nav-links" id="primary-navigation">
 				<li class="li-L"><a href="#hero">Home</a></li>
 				<li class="li-L"><a href="#about">About</a></li>
 				<li class="nav-brand">
@@ -220,7 +226,7 @@
 				</div>
 
 				<button class="carousel-control carousel-prev" type="button" aria-label="Previous release" disabled>
-					<span aria-hidden="true">&#8592;</span>
+					<img src="./assets/icons/carrousel_left.svg" alt="" aria-hidden="true" />
 				</button>
 
 				<div class="carousel-viewport">
@@ -230,7 +236,7 @@
 				</div>
 
 				<button class="carousel-control carousel-next" type="button" aria-label="Next release" disabled>
-					<span aria-hidden="true">&#8594;</span>
+					<img src="./assets/icons/carrousel_right.svg" alt="" aria-hidden="true" />
 				</button>
 
 				<div class="carousel-dots" aria-label="Choose a release"></div>
@@ -243,7 +249,7 @@
 				<h2>Contact</h2>
 				<p>Have a project, collaboration, or idea in mind? Send me the details and I will get back to you.</p>
 				<a class="contact-link" href="https://forms.gle/2bCe5ytZov47Hk2UA" target="_blank" rel="noopener noreferrer">
-					Open contact form <span aria-hidden="true">&#8599;</span>
+					Open contact form <img src="./assets/icons/external.svg" alt="" aria-hidden="true" />
 				</a>
 			</div>
 		</section>

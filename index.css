@@ -136,6 +136,11 @@ header {
 	max-width: 92rem;
 }
 
+.mobile-nav-brand,
+.nav-toggle {
+	display: none;
+}
+
 .nav-links {
 	display: grid;
 	grid-template-columns: 1fr 1fr 1.35fr 1fr 1fr;
@@ -963,10 +968,22 @@ header {
 	transition: color 220ms ease, border-color 220ms ease, background 220ms ease;
 }
 
+.carousel-control img {
+	display: block;
+	width: 1rem;
+	height: 1rem;
+	object-fit: contain;
+	transition: filter 220ms ease;
+}
+
 .carousel-control:hover {
 	color: var(--ink);
 	border-color: var(--cyan);
 	background: var(--cyan);
+}
+
+.carousel-control:hover img {
+	filter: brightness(0);
 }
 
 .carousel-control:disabled {
@@ -978,6 +995,10 @@ header {
 	color: var(--text);
 	border-color: var(--line);
 	background: rgba(255, 255, 255, 0.025);
+}
+
+.carousel-control:disabled:hover img {
+	filter: none;
 }
 
 .carousel-prev {
@@ -1066,8 +1087,11 @@ header {
 	transition: color 220ms ease, background 220ms ease, border-color 220ms ease;
 }
 
-.contact-link span {
-	font-size: 1rem;
+.contact-link img {
+	display: block;
+	width: 0.85rem;
+	height: 0.85rem;
+	object-fit: contain;
 	transition: transform 220ms ease;
 }
 
@@ -1077,7 +1101,8 @@ header {
 	background: var(--cyan);
 }
 
-.contact-link:hover span {
+.contact-link:hover img {
+	filter: brightness(0);
 	transform: translate(0.15rem, -0.15rem);
 }
 
@@ -1200,6 +1225,101 @@ footer a:hover {
 		height: 2.55rem;
 	}
 
+	.navbar.menu-ready {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 1rem;
+	}
+
+	.navbar.menu-ready .mobile-nav-brand,
+	.navbar.menu-ready .nav-toggle {
+		display: grid;
+		place-items: center;
+	}
+
+	.navbar.menu-ready .mobile-nav-brand {
+		width: 2.75rem;
+		height: 100%;
+	}
+
+	.navbar.menu-ready .nav-toggle {
+		width: 2.75rem;
+		height: 2.75rem;
+		padding: 0.72rem;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.035);
+		cursor: pointer;
+		transition: border-color 220ms ease, background 220ms ease;
+	}
+
+	.navbar.menu-ready .nav-toggle:hover,
+	.navbar.menu-ready .nav-toggle[aria-expanded="true"] {
+		border-color: rgba(105, 174, 252, 0.72);
+		background: rgba(105, 174, 252, 0.14);
+	}
+
+	.navbar.menu-ready .nav-toggle img {
+		display: block;
+		width: 1.15rem;
+		height: 1.15rem;
+		object-fit: contain;
+	}
+
+	.navbar.menu-ready .nav-links {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: auto;
+		max-height: 0;
+		overflow: hidden;
+		border-bottom: 1px solid transparent;
+		background: rgba(3, 7, 9, 0.97);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition: max-height 320ms ease, opacity 220ms ease, visibility 220ms ease, border-color 220ms ease;
+	}
+
+	.navbar.menu-ready .nav-links.is-open {
+		max-height: calc(100svh - 4rem);
+		overflow-y: auto;
+		border-bottom-color: rgba(255, 255, 255, 0.1);
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+	}
+
+	.navbar.menu-ready .nav-links li {
+		width: 100%;
+		height: auto;
+	}
+
+	.navbar.menu-ready .nav-links .nav-brand {
+		display: none;
+	}
+
+	.navbar.menu-ready .nav-links a {
+		justify-content: flex-start;
+		min-height: 3.75rem;
+		padding: 0 1.25rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.07);
+		font-size: 0.68rem;
+		letter-spacing: 0.16em;
+	}
+
+	.navbar.menu-ready .nav-links > li a::before {
+		inset: auto 1.25rem 0;
+		transform-origin: left;
+	}
+
 	.hero-banner {
 		min-height: 35rem;
 	}
@@ -1269,18 +1389,56 @@ footer a:hover {
 
 	.about {
 		justify-content: flex-start;
-		min-height: 48rem;
-		padding: 5rem 1.25rem 18rem;
+		align-items: stretch;
+		min-height: auto;
+		padding: 5rem 1.25rem;
 	}
 
 	.about-text {
-		max-width: none;
+		display: contents;
 	}
 
 	.about-image-glitch {
-		right: -32vw;
-		width: 110vw;
-		opacity: 0.38;
+		position: relative;
+		order: 3;
+		bottom: auto;
+		right: auto;
+		width: min(100%, 28rem);
+		margin: 0 auto 1.5rem;
+		opacity: 0.82;
+	}
+
+	.about-text h2 {
+		order: 1;
+	}
+
+	.artist-greetings {
+		order: 2;
+		margin-bottom: 1rem;
+	}
+
+	.about-text > p:not(.artist-greetings) {
+		order: 4;
+	}
+
+	.social-links {
+		order: 5;
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: clamp(0.25rem, 1.5vw, 0.5rem);
+		width: 60vw;
+	}
+
+	.social-links a {
+		width: min(100%, 2.35rem);
+		height: auto;
+		aspect-ratio: 1;
+		justify-self: center;
+	}
+
+	.social-links img {
+		width: 0.95rem;
+		height: 0.95rem;
 	}
 
 	.about-text h2,
